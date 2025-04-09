@@ -35,7 +35,7 @@ A full-featured e-commerce website built with Node.js, Express, and MongoDB.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/DeveshAg30/Ecommerce.git
+git clone https://github.com/anuj1910/E-Commerce
 cd ecommerce
 ```
 
