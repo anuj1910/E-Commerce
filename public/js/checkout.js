@@ -78,51 +78,73 @@ document.addEventListener('DOMContentLoaded', function() {
         const zip = document.getElementById('zip').value.trim();
 
         // Name validation (at least 2 words)
-        if (!name ) {
-            alert('Please enter your full name');
+        if (!name) {
+            showAlert('Please enter your full name', 'warning');
             return false;
         }
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            alert('Please enter a valid email address');
+            showAlert('Please enter a valid email address', 'warning');
             return false;
         }
 
         // Address validation
         if (address.length < 10) {
-            alert('Please enter a complete address');
+            showAlert('Please enter a complete address', 'warning');
             return false;
         }
 
         // City validation
         if (!city) {
-            alert('Please enter your city');
+            showAlert('Please enter your city', 'warning');
             return false;
         }
 
         // State validation
         if (!state) {
-            alert('Please enter your state');
+            showAlert('Please enter your state', 'warning');
             return false;
         }
 
         // ZIP code validation (6 digits for Indian postal codes)
         const zipRegex = /^\d{6}$/;
         if (!zipRegex.test(zip)) {
-            alert('Please enter a valid 6-digit ZIP code');
+            showAlert('Please enter a valid 6-digit ZIP code', 'warning');
             return false;
         }
 
         return true;
     }
 
+    // Show alert message
+    function showAlert(message, type = 'info') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
     // Handle order submission
-    async function handleOrderSubmission() {
+    async function handleOrderSubmission(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        
         if (!validateForm()) return;
 
         const orderData = {
+            items: await getCartItems(),
             shippingAddress: {
                 name: document.getElementById('name').value.trim(),
                 email: document.getElementById('email').value.trim(),
@@ -144,20 +166,42 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to place order');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to place order');
             }
 
             const order = await response.json();
-            alert('Order placed successfully!');
-            window.location.href = `/order-confirmation.html?id=${order._id}`;
+            showAlert('Order placed successfully!', 'success');
+            window.location.href = `/order-view.html?id=${order._id}`;
         } catch (error) {
             console.error('Error placing order:', error);
-            alert('There was an error placing your order. Please try again.');
+            showAlert(error.message || 'There was an error placing your order. Please try again.', 'danger');
+        }
+    }
+
+    // Helper function to get cart items
+    async function getCartItems() {
+        try {
+            const response = await fetch('/api/cart', {
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                throw new Error('Failed to fetch cart items');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching cart items:', error);
+            return [];
         }
     }
 
     // Event listeners
-    placeOrderBtn.addEventListener('click', handleOrderSubmission);
+    if (placeOrderBtn) {
+        placeOrderBtn.addEventListener('click', handleOrderSubmission);
+    }
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', handleOrderSubmission);
+    }
 
     // Load cart items when page loads
     loadCartItems();

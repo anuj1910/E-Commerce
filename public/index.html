@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="ecommerceApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +7,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <!-- Add AngularJS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
 </head>
-<body>
+<body ng-controller="MainController">
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">E-Commerce Store</a>
+            <a class="navbar-brand" href="/">{{storeName}}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -29,7 +31,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/cart.html">
                             <i class="bi bi-cart"></i> Cart
-                            <span id="cart-count" class="badge bg-primary">0</span>
+                            <span id="cart-count" class="badge bg-primary">{{cartCount}}</span>
                         </a>
                     </li>
                     <li class="nav-item" id="login-nav">
@@ -48,18 +50,28 @@
 
     <!-- Main Content -->
     <div class="container mt-4">
-        <h1 class="text-center mb-4">Welcome to Our Store</h1>
+        <h1 class="text-center mb-4">{{welcomeMessage}}</h1>
         
         <!-- Featured Products -->
         <div class="row" id="featured-products">
-            <!-- Products will be loaded here via JavaScript -->
+            <div class="col-md-4 col-sm-6" ng-repeat="product in featuredProducts">
+                <div class="card product-card">
+                    <img src="https://picsum.photos/300/200?random={{product._id}}" class="card-img-top product-image" alt="{{product.name}}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{product.name}}</h5>
+                        <p class="card-text">{{product.description}}</p>
+                        <p class="card-text"><strong>${{product.price}}</strong></p>
+                        <button class="btn btn-primary" ng-click="addToCart(product._id)">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Footer -->
     <footer class="bg-dark text-white mt-5 py-3">
         <div class="container text-center">
-            <p>&copy; 2024 E-Commerce Store. All rights reserved.</p>
+            <p>&copy; {{currentYear}} E-Commerce Store. All rights reserved.</p>
         </div>
     </footer>
 
@@ -67,5 +79,40 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
+
+    <script>
+        var app = angular.module('ecommerceApp', []);
+        app.controller('MainController', function($scope) {
+            $scope.storeName = 'E-Commerce Store';
+            $scope.welcomeMessage = 'Welcome to Our Store';
+            $scope.currentYear = new Date().getFullYear();
+            $scope.cartCount = 0;
+            $scope.featuredProducts = [];
+
+            // Initialize with existing functionality
+            $scope.init = function() {
+                fetchProducts().then(products => {
+                    $scope.featuredProducts = products;
+                    $scope.$apply();
+                });
+                updateCartCount().then(count => {
+                    $scope.cartCount = count;
+                    $scope.$apply();
+                });
+            };
+
+            $scope.addToCart = function(productId) {
+                addToCart(productId).then(() => {
+                    updateCartCount().then(count => {
+                        $scope.cartCount = count;
+                        $scope.$apply();
+                    });
+                });
+            };
+
+
+            $scope.init();
+        });
+    </script>
 </body>
-</html> 
+</html>
