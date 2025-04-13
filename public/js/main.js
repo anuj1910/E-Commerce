@@ -93,14 +93,24 @@ async function displayCart() {
             const container = document.getElementById('cart-items');
             if (!container) return;
 
-            if (cart.length === 0) {
+            if (!cart || cart.length === 0) {
                 container.innerHTML = '<p>Your cart is empty</p>';
                 document.getElementById('cart-subtotal').textContent = '₹0.00';
                 document.getElementById('cart-total').textContent = '₹0.00';
                 return;
             }
 
-            container.innerHTML = cart.map(item => `
+            // Filter out any items with null products
+            const validCartItems = cart.filter(item => item.product && item.product._id);
+
+            if (validCartItems.length === 0) {
+                container.innerHTML = '<p>Your cart is empty</p>';
+                document.getElementById('cart-subtotal').textContent = '₹0.00';
+                document.getElementById('cart-total').textContent = '₹0.00';
+                return;
+            }
+
+            container.innerHTML = validCartItems.map(item => `
                 <div class="cart-item">
                     <div class="row">
                         <div class="col-md-2">
@@ -124,7 +134,7 @@ async function displayCart() {
             `).join('');
 
             // Calculate subtotal and total
-            const subtotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+            const subtotal = validCartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
             const total = subtotal; // Since shipping is free
             
             // Update subtotal and total
@@ -133,6 +143,10 @@ async function displayCart() {
         }
     } catch (error) {
         console.error('Error fetching cart:', error);
+        const container = document.getElementById('cart-items');
+        if (container) {
+            container.innerHTML = '<p class="text-danger">Error loading cart. Please try again.</p>';
+        }
     }
 }
 
